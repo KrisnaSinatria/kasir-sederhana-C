@@ -1,0 +1,280 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Definisi struktur Produk untuk menyimpan informasi barang
+struct Produk {
+    char produk[50]; // Array karakter untuk menyimpan nama produk (maksimal 50 karakter)
+    float harga;     // Variabel float untuk menyimpan harga produk dalam rupiah
+};
+
+// Fungsi untuk menampilkan menu produk dan opsi tambahan
+void displayMenu(struct Produk produkDanHarga[], int jumlahProduk) {
+    // Mencetak header toko dan instruksi untuk pengguna
+    printf("            Selamat Datang di Toko SKENSA            \n");
+    printf("      Silahkan Pilih Barang yang Anda Inginkan :     \n");
+    printf("=====================================================\n");
+    printf("| No. |        Nama Barang        |      Harga      |\n");
+    printf("-----------------------------------------------------\n");
+
+    // Looping untuk menampilkan daftar produk dari array produkDanHarga
+    for(int i = 0; i < jumlahProduk; i++) {
+        // Loop ini bertujuan untuk mengiterasi setiap elemen dalam array produkDanHarga
+        // Variabel i dimulai dari 0 hingga kurang dari jumlahProduk
+        // Setiap iterasi mencetak satu produk beserta nomor urut dan harganya
+        printf("|  %-2d |    %-19s    | Rp.%-12.0f |\n", i + 1, produkDanHarga[i].produk, produkDanHarga[i].harga);
+        // i + 1 digunakan agar nomor urut dimulai dari 1, bukan 0
+    }
+
+    // Mencetak garis pemisah setelah daftar produk
+    printf("=====================================================\n");
+
+    // Menampilkan opsi tambahan untuk pengguna
+    printf("\n  99. Struk Pembayaran");
+    printf("\n  55. Reset Pilihan");
+    printf("\n  00. Keluar\n");
+    printf("\n=====================================================");
+}
+
+// Fungsi untuk mengurutkan pesanan berdasarkan jumlah pembelian (descending)
+void sortPesanan(struct Produk produkDanHarga[], int jumlahProduk, int jumlahBeli[]) {
+    // Menggunakan algoritma Bubble Sort untuk mengurutkan data
+    for(int i = 0; i < jumlahProduk - 1; i++) {
+        // Loop luar ini mengontrol jumlah iterasi pengurutan
+        // Berjalan sebanyak jumlahProduk - 1 kali karena setiap iterasi menempatkan elemen terbesar di akhir
+        for(int j = 0; j < jumlahProduk - i - 1; j++) {
+            // Loop dalam ini membandingkan elemen berdekatan dalam array jumlahBeli
+            // Batasnya adalah jumlahProduk - i - 1 karena elemen terakhir yang sudah diurutkan tidak perlu dibandingkan lagi
+            if(jumlahBeli[j] < jumlahBeli[j + 1]) {
+                // Pengkondisian ini mengecek apakah jumlah pembelian di indeks j lebih kecil dari indeks berikutnya (j + 1)
+                // Jika ya, maka elemen perlu ditukar untuk mengurutkan secara descending
+                int tempQty = jumlahBeli[j]; // Simpan jumlah beli sementara
+                jumlahBeli[j] = jumlahBeli[j + 1]; // Tukar jumlah beli ke indeks berikutnya
+                jumlahBeli[j + 1] = tempQty; // Kembalikan nilai sementara ke indeks awal
+
+                // Tukar data produk agar sesuai dengan urutan jumlah beli
+                struct Produk temp = produkDanHarga[j];
+                produkDanHarga[j] = produkDanHarga[j + 1];
+                produkDanHarga[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Fungsi untuk menghasilkan ID struk unik berdasarkan waktu dan angka acak
+int generateStrukID() {
+    time_t current_time;
+    time(&current_time); // Mengambil waktu saat ini dalam detik sejak epoch
+
+    int randNum = rand() % 10000; // Menghasilkan angka acak antara 0-9999
+    int strukID = randNum + (int)current_time; // Menggabungkan waktu dan angka acak untuk ID unik
+
+    return strukID; // Mengembalikan ID struk yang dihasilkan
+}
+
+// Fungsi utama program
+int main() {
+    // Inisialisasi array produk beserta harga
+    struct Produk produkDanHarga[] = {
+        {"Buku Tulis", 5000},
+        {"Pensil", 2000},
+        {"Penghapus", 1000},
+        {"Penggaris", 1000},
+        {"Bujur Sangkar", 500},
+    };
+
+    // Menghitung jumlah produk berdasarkan ukuran array
+    int jumlahProduk = sizeof(produkDanHarga) / sizeof(produkDanHarga[0]);
+
+    int jumlah;              // Variabel untuk menyimpan jumlah barang yang ingin dibeli
+    int jumlahBeli[5] = {0}; // Array untuk menyimpan jumlah pembelian per produk, diinisialisasi 0
+    int pilihan;             // Variabel untuk menyimpan input pilihan pengguna
+    int strukID = generateStrukID(); // Menghasilkan ID struk unik
+    int no_barang = 0;       // Nomor urut untuk rekap barang
+    float hargaAkhir[5] = {0}; // Array untuk menyimpan total harga per produk, diinisialisasi 0
+    float totalHarga;        // Variabel sementara untuk menyimpan total harga per produk
+    float diskon[5] = {0};   // Array untuk menyimpan nilai diskon per produk, diinisialisasi 0
+    float totalHargaAkhir = 0; // Total harga keseluruhan sebelum diskon
+    float totalDiskon = 0;   // Total diskon dari semua produk
+    float totalBayar;        // Total yang harus dibayar setelah diskon
+    float uangBayar;         // Jumlah uang yang dibayarkan pengguna
+    float kembalian;         // Uang kembalian dari pembayaran
+
+    // Mendapatkan waktu saat ini untuk dicantumkan di struk
+    time_t current_time;
+    struct tm* local_time;
+    current_time = time(NULL);
+    local_time = localtime(&current_time);
+    char time_str[50];
+
+    // Mengformat waktu menjadi string dengan format hari, bulan, tanggal, jam, dan tahun
+    strftime(time_str, sizeof(time_str), " %a %b %d %H:%M:%S %Y", local_time);
+
+    // Membuat nama file struk berdasarkan ID unik
+    char filename[50];
+    sprintf(filename, "struk %d.txt", strukID);
+
+    // Membuka file untuk menulis struk
+    FILE *fp = fopen(filename, "w");
+    if(fp == NULL) {
+        // Pengkondisian ini mengecek apakah file berhasil dibuka
+        // Jika gagal (fp == NULL), tampilkan pesan error dan keluar dari program
+        printf("\nGagal membuat file\n");
+        exit(1);
+    }
+
+    // Menampilkan menu awal kepada pengguna
+    displayMenu(produkDanHarga, jumlahProduk);
+
+    // Loop utama program untuk memproses input pengguna
+    while (1) {
+        // Loop ini berjalan terus menerus sampai pengguna memilih untuk keluar atau mencetak struk
+        printf("\n\nMasukkan pilihan yang anda inginkan: ");
+        scanf("%d", &pilihan);
+
+        // Pengkondisian untuk memeriksa input pengguna
+        if(pilihan >= 1 && pilihan <= jumlahProduk) {
+            // Pengkondisian ini mengecek apakah pilihan adalah nomor produk yang valid (1 sampai jumlahProduk)
+            // Jika ya, memungkinkan pengguna memasukkan jumlah pembelian
+            printf("\n [%d] Pembelian barang %s", pilihan, produkDanHarga[pilihan-1].produk);
+            printf("\n     Jumlah: ");
+            scanf("%d", &jumlah);
+
+            printf("\n=====================================================");
+
+            // Menambahkan jumlah pembelian dan menghitung total harga untuk produk yang dipilih
+            jumlahBeli[pilihan-1] += jumlah; // Menambah jumlah beli pada indeks yang sesuai
+            hargaAkhir[pilihan-1] += produkDanHarga[pilihan-1].harga * jumlah; // Menambah total harga
+            continue; // Kembali ke awal loop untuk input berikutnya
+
+        } else if (pilihan == 99) {
+            // Pengkondisian ini mengecek apakah pengguna memilih untuk mencetak struk (99)
+            sortPesanan(produkDanHarga, jumlahProduk, jumlahBeli); // Mengurutkan pesanan
+
+            // Menampilkan header rekap pesanan
+            printf("\n                             Rekap Pesanan Barang                           \n");
+            printf("==============================================================================\n");
+            printf("| No. |  Jumlah  |    Nama Barang    |    Harga    | Total Harga |   Diskon  |\n");
+            printf("------------------------------------------------------------------------------\n");
+
+            // Looping untuk menampilkan rekap dan menghitung diskon
+            for(int i = 0; i < jumlahProduk; i++) {
+                // Loop ini bertujuan untuk mengiterasi setiap produk dalam array
+                // Digunakan untuk menampilkan detail pesanan dan menghitung diskon
+                totalHarga = produkDanHarga[i].harga * jumlahBeli[i]; // Hitung total harga per produk
+
+                if(jumlahBeli[i] > 0) {
+                    // Pengkondisian ini mengecek apakah produk ini dibeli (jumlah > 0)
+                    // Jika ya, tampilkan detailnya dan hitung diskon
+                    if(jumlahBeli[i] < 3) {
+                        // Pengkondisian ini mengecek apakah jumlah pembelian kurang dari 3
+                        // Jika ya, tidak ada diskon
+                        diskon[i] = 0;
+                    } else if (jumlahBeli[i] >= 3 && jumlahBeli[i] < 5) {
+                        // Pengkondisian ini mengecek apakah jumlah pembelian antara 3 dan 4
+                        // Jika ya, berikan diskon 10%
+                        diskon[i] = totalHarga * 0.10;
+                    } else if (jumlahBeli[i] >= 5) {
+                        // Pengkondisian ini mengecek apakah jumlah pembelian 5 atau lebih
+                        // Jika ya, berikan diskon 15%
+                        diskon[i] = totalHarga * 0.15;
+                    }
+
+                    // Menampilkan detail pesanan untuk produk yang dibeli
+                    printf("|  %-2d |     %-2d   |   %-13s   |  Rp.%-7.0f |  Rp.%-6.0f  | Rp.%-7.0f|\n",
+                           i + 1, jumlahBeli[i], produkDanHarga[i].produk, produkDanHarga[i].harga,
+                           totalHarga, diskon[i]);
+                    no_barang++; // Menambah nomor urut untuk barang yang ditampilkan
+                }
+                totalHargaAkhir += hargaAkhir[i]; // Menambah total harga keseluruhan
+                totalDiskon += diskon[i];         // Menambah total diskon keseluruhan
+                totalBayar = totalHargaAkhir - totalDiskon; // Menghitung total yang harus dibayar
+            }
+            printf("==============================================================================\n");
+            printf("\n     Total Harga  :  Rp.%.0f", totalHargaAkhir);
+            printf("\n     Total Diskon :  Rp.%.0f", totalDiskon);
+            printf("\n     Total Bayar  :  Rp.%.0f", totalBayar);
+            printf("\n\n==============================================================================\n");
+
+            // Loop untuk meminta uang pembayaran dari pengguna
+            while(1) {
+                // Loop ini bertujuan untuk terus meminta input uang bayar sampai jumlahnya cukup
+                printf("Masukkan uang bayar: Rp.");
+                scanf("%f", &uangBayar);
+
+                if(uangBayar >= totalBayar) {
+                    // Pengkondisian ini mengecek apakah uang yang dibayarkan cukup untuk membayar totalBayar
+                    // Jika ya, hitung kembalian dan keluar dari loop
+                    kembalian = uangBayar - totalBayar;
+                    printf("\n Kembalian : Rp.%.0f\n", kembalian);
+                    break;
+                } else {
+                    // Pengkondisian ini mengecek apakah uang kurang dari totalBayar
+                    // Jika ya, tampilkan pesan error dan ulangi loop
+                    printf("\n Maaf, uang anda kurang.\n");
+                    continue;
+                }
+            }
+
+            // Menulis struk ke file
+            fprintf(fp, "======================================================================\n");
+            fprintf(fp, "|                             TOKO SKENSA                            |\n");
+            fprintf(fp, "|                 Jl. HOS Cokroainoto No. 84 Denpasar               |\n");
+            fprintf(fp, "|                          Telp. 0816285791                          |\n");
+            fprintf(fp, "|                                Bali                                |\n");
+            fprintf(fp, "|   ID Struk: %-55d|\n", strukID);
+            fprintf(fp, "======================================================================\n");
+            fprintf(fp, "|      Nama Barang      |    Harga    |   Total Harga   |   Diskon   |\n");
+            fprintf(fp, "----------------------------------------------------------------------\n");
+
+            // Looping untuk menulis detail pesanan ke file
+            for(int i = 0; i < jumlahProduk; i++) {
+                // Loop ini bertujuan untuk mengiterasi setiap produk dan menulis detailnya ke file
+                // Hanya produk yang dibeli (jumlahBeli > 0) yang ditulis
+                if(jumlahBeli[i] > 0) {
+                    totalHarga = produkDanHarga[i].harga * jumlahBeli[i];
+                    fprintf(fp, "| x%d %-18s | Rp.%-8.0f | Rp.%-12.0f | Rp.%-8.0f|\n",
+                            jumlahBeli[i], produkDanHarga[i].produk, produkDanHarga[i].harga,
+                            totalHarga, diskon[i]);
+                }
+            }
+            fprintf(fp, "======================================================================");
+            fprintf(fp, "\n|     Total Harga  :  Rp.%-44.0f|", totalHargaAkhir);
+            fprintf(fp, "\n|     Total Diskon :  Rp.%-44.0f|", totalDiskon);
+            fprintf(fp, "\n|     Total Bayar  :  Rp.%-44.0f|", totalBayar);
+            fprintf(fp, "\n|         Uang Bayar  :  Rp.%-41.0f|", uangBayar);
+            fprintf(fp, "\n|         Kembalian   :  Rp.%-41.0f|", kembalian);
+            fprintf(fp, "\n| Waktu Dan Hari: %-51s|\n", time_str);
+            fprintf(fp, "======================================================================\n");
+            fclose(fp); // Menutup file setelah selesai menulis
+
+            // Menampilkan pesan penutup
+            printf("\n Terima Kasih telah berbelanja!");
+            printf("\nStruk tersimpan di %s\n", filename);
+            break; // Keluar dari loop utama setelah struk dicetak
+
+        } else if (pilihan == 55) {
+            // Pengkondisian ini mengecek apakah pengguna memilih untuk mereset pesanan (55)
+            for(int i = 0; i < jumlahProduk; i++) {
+                // Loop ini bertujuan untuk mengatur ulang jumlah beli dan harga akhir untuk semua produk
+                jumlahBeli[i] = 0;
+                hargaAkhir[i] = 0;
+            }
+            system("cls"); // Membersihkan layar (khusus Windows)
+            printf("\t     [!] Pilihan telah direset [!]\n\n");
+            displayMenu(produkDanHarga, jumlahProduk); // Menampilkan menu kembali
+            continue; // Kembali ke awal loop utama
+
+        } else if (pilihan == 00) {
+            // Pengkondisian ini mengecek apakah pengguna memilih untuk keluar (00)
+            printf("exiting...");
+            exit(0); // Keluar dari program
+
+        } else {
+            // Pengkondisian ini menangani jika pilihan pengguna tidak valid (bukan 1-jumlahProduk, 99, 55, atau 00)
+            printf("\nPilihan tidak valid!");
+            continue; // Kembali ke awal loop untuk input baru
+        }
+    }
+    return 0; // Mengakhiri program dengan status sukses
+}
